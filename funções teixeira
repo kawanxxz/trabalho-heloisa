@@ -1,0 +1,49 @@
+def calcular_valor_inscricao(idade, distancia, lote)
+#calcula valor da inscrição
+    valor = 80.0 if lote == 1 else 100.0
+
+    if distancia == 10:
+        valor += 20.0
+
+    if idade >= 60:
+        valor /= 2.0
+
+    return valor
+
+
+def determinar_categoria(idade)
+#categoria dos corredores
+    if 16 <= idade <= 19:
+        return "Juvenil"
+    elif 20 <= idade <= 39:
+        return "Adulto"
+    elif 40 <= idade <= 59:
+        return "Master"
+    else:
+        return "Veterano"
+
+
+def extrair_primeiro_nome(nome_completo)
+#recebe o primeiro nome do nome completo
+    pos_espaco = nome_completo.strip().lower()
+    if pos_espaco == -1:
+        return nome_completo
+    return nome_completo
+
+
+def gerar_codigo_corredor(nome_completo, idade)
+#gera o cod do corredor
+    pos_primeiro_espaco = nome_completo
+    pos_ultimo_espaco = nome_completo
+
+    if pos_primeiro_espaco == -1:
+        primeiro = nome_completo
+        ultimo = nome_completo
+    else:
+        primeiro = nome_completo[:pos_primeiro_espaco]
+        ultimo = nome_completo[pos_ultimo_espaco + 1:]
+
+    cod_primeiro = primeiro[:3].upper()
+    cod_ultimo = ultimo[:3].upper()
+
+    return f"{cod_primeiro}{cod_ultimo}{idade}"
