@@ -1,17 +1,18 @@
-def calcular_valor_inscricao(idade, distancia, lote)
+
+def calcular_valor_inscricao(idade, distancia, lote):
 #calcula valor da inscrição
     valor = 80.0 if lote == 1 else 100.0
-
+ 
     if distancia == 10:
         valor += 20.0
-
+ 
     if idade >= 60:
         valor /= 2.0
-
+ 
     return valor
-
-
-def determinar_categoria(idade)
+ 
+ 
+def determinar_categoria(idade):
 #categoria dos corredores
     if 16 <= idade <= 19:
         return "Juvenil"
@@ -21,29 +22,53 @@ def determinar_categoria(idade)
         return "Master"
     else:
         return "Veterano"
-
-
-def extrair_primeiro_nome(nome_completo)
+ 
+ 
+def extrair_primeiro_nome(nome_completo):
 #recebe o primeiro nome do nome completo
-    pos_espaco = nome_completo.strip().lower()
+    nome_completo = nome_completo.strip()
+    pos_espaco = nome_completo.find(" ")
     if pos_espaco == -1:
         return nome_completo
-    return nome_completo
-
-
-def gerar_codigo_corredor(nome_completo, idade)
+    return nome_completo[:pos_espaco]
+ 
+ 
+def gerar_codigo_corredor(nome_completo, idade):
 #gera o cod do corredor
-    pos_primeiro_espaco = nome_completo
-    pos_ultimo_espaco = nome_completo
-
+    nome_completo = nome_completo.strip()
+    pos_primeiro_espaco = nome_completo.find(" ")
+    pos_ultimo_espaco = nome_completo.rfind(" ")
+ 
     if pos_primeiro_espaco == -1:
         primeiro = nome_completo
         ultimo = nome_completo
     else:
         primeiro = nome_completo[:pos_primeiro_espaco]
         ultimo = nome_completo[pos_ultimo_espaco + 1:]
-
+ 
     cod_primeiro = primeiro[:3].upper()
     cod_ultimo = ultimo[:3].upper()
-
+ 
     return f"{cod_primeiro}{cod_ultimo}{idade}"
+ 
+ 
+def converter_tempo_para_segundos(tempo):
+#converte o tempo HH:MM:SS (texto) para segundos
+    partes = tempo.strip().split(":")
+    horas = int(partes[0])
+    minutos = int(partes[1])
+    segundos = int(partes[2])
+ 
+    return horas * 3600 + minutos * 60 + segundos
+ 
+ 
+def calcular_pace(tempo, distancia):
+#calcula o pace (tempo medio por km), desprezando fracoes de segundo
+    total_segundos = converter_tempo_para_segundos(tempo)
+    segundos_por_km = total_segundos // distancia
+ 
+    minutos = segundos_por_km // 60
+    segundos = segundos_por_km % 60
+ 
+    return f"{minutos}'{segundos:02d}\"/km"
+ 
