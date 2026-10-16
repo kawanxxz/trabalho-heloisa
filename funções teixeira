@@ -1,4 +1,3 @@
-
 def calcular_valor_inscricao(idade, distancia, lote):
 #calcula valor da inscrição
     valor = 80.0 if lote == 1 else 100.0
@@ -72,3 +71,91 @@ def calcular_pace(tempo, distancia):
  
     return f"{minutos}'{segundos:02d}\"/km"
  
+ 
+def foi_premiado(categoria, distancia, total_segundos):
+#compara o tempo com o limite da categoria (limites em segundos)
+    if categoria == "Juvenil" or categoria == "Master":
+        limite = 1500 if distancia == 5 else 3120
+    elif categoria == "Adulto":
+        limite = 1320 if distancia == 5 else 2760
+    else:
+        limite = 1800 if distancia == 5 else 3780
+ 
+    return total_segundos <= limite
+ 
+ 
+def fazer_inscricao():
+#faz a inscricao e retorna o valor pago (ou None se for recusada)
+    nome = input("Nome completo: ")
+    idade = int(input("Idade: "))
+ 
+    if idade < 16:
+        print("Inscrição recusada: idade mínima de 16 anos.")
+        return None
+ 
+    distancia = int(input("Distância (5 ou 10 km): "))
+    while distancia != 5 and distancia != 10:
+        distancia = int(input("Escolha 5 ou 10 km: "))
+ 
+    lote = int(input("Lote (1 ou 2): "))
+    while lote != 1 and lote != 2:
+        lote = int(input("Escolha lote 1 ou 2: "))
+ 
+    valor = calcular_valor_inscricao(idade, distancia, lote)
+ 
+    print()
+    print("--- COMPROVANTE ---")
+    print("Corredor:", extrair_primeiro_nome(nome))
+    print("Código:", gerar_codigo_corredor(nome, idade))
+    print("Categoria:", determinar_categoria(idade))
+    print("Distância:", distancia, "km")
+    print(f"Valor a pagar: R$ {valor:.2f}")
+ 
+    return valor
+ 
+ 
+def calcular_resultado():
+#mostra o resultado de um corredor
+    idade = int(input("Idade: "))
+    distancia = int(input("Distância (5 ou 10 km): "))
+    tempo = input("Tempo de prova (HH:MM:SS): ")
+ 
+    categoria = determinar_categoria(idade)
+    segundos = converter_tempo_para_segundos(tempo)
+ 
+    print()
+    print("--- RESULTADO ---")
+    print("Categoria:", categoria)
+    print("Tempo em segundos:", segundos)
+    print("Pace:", calcular_pace(tempo, distancia))
+    if foi_premiado(categoria, distancia, segundos):
+        print("Premiado: SIM")
+    else:
+        print("Premiado: NÃO")
+ 
+ 
+def main():
+#menu principal
+    total_inscricoes = 0
+    total_arrecadado = 0.0
+    opcao = 0
+ 
+    while opcao != 3:
+        print()
+        print("1 - Fazer inscrição")
+        print("2 - Calcular resultado")
+        print("3 - Sair")
+        opcao = int(input("Escolha: "))
+        print()
+ 
+        if opcao == 1:
+            valor = fazer_inscricao()
+            if valor is not None:
+                total_inscricoes += 1
+                total_arrecadado += valor
+        elif opcao == 2:
+            calcular_resultado()
+ 
+    print("--- RESUMO DA SESSÃO ---")
+    print("Inscrições feitas:", total_inscricoes)
+    print(f"Total arrecadado: R$ {total_arrecadado:.2f}")
