@@ -1,30 +1,31 @@
 def calcular_valor_inscricao(idade, distancia, lote):
-#calcula valor da inscrição
+    """calcula valor da inscrição"""
     valor = 80.0 if lote == 1 else 100.0
  
     if distancia == 10:
         valor += 20.0
  
     if idade >= 60:
-        valor /= 2.0
+        valor *= 0.5
  
     return valor
  
  
 def determinar_categoria(idade):
-#categoria dos corredores
+    """categoria dos corredores"""
     if 16 <= idade <= 19:
         return "Juvenil"
     elif 20 <= idade <= 39:
         return "Adulto"
     elif 40 <= idade <= 59:
         return "Master"
-    else:
+    elif 60 <= idade:
         return "Veterano"
- 
+    else:
+        return "Inváida"
  
 def extrair_primeiro_nome(nome_completo):
-#recebe o primeiro nome do nome completo
+    """recebe o primeiro nome do nome completo"""
     nome_completo = nome_completo.strip()
     pos_espaco = nome_completo.find(" ")
     if pos_espaco == -1:
@@ -33,7 +34,9 @@ def extrair_primeiro_nome(nome_completo):
  
  
 def gerar_codigo_corredor(nome_completo, idade):
-#gera o cod do corredor
+    """Gera o código do corredor usando as 3 primeiras letras do primeiro e ultimo nome
+(.find(" ") e .rfind(" ") são usados para ir do inicio da str ate o primeiro espaço e do final ate o ultimo espaço)"""
+    
     nome_completo = nome_completo.strip()
     pos_primeiro_espaco = nome_completo.find(" ")
     pos_ultimo_espaco = nome_completo.rfind(" ")
@@ -52,7 +55,7 @@ def gerar_codigo_corredor(nome_completo, idade):
  
  
 def converter_tempo_para_segundos(tempo):
-#converte o tempo HH:MM:SS (texto) para segundos
+    """converte o tempo HH:MM:SS (texto) para segundos"""
     partes = tempo.strip().split(":")
     horas = int(partes[0])
     minutos = int(partes[1])
@@ -62,7 +65,7 @@ def converter_tempo_para_segundos(tempo):
  
  
 def calcular_pace(tempo, distancia):
-#calcula o pace (tempo medio por km), desprezando fracoes de segundo
+    """calcula o pace (tempo medio por km), desprezando fracoes de segundo"""
     total_segundos = converter_tempo_para_segundos(tempo)
     segundos_por_km = total_segundos // distancia
  
@@ -73,19 +76,18 @@ def calcular_pace(tempo, distancia):
  
  
 def foi_premiado(categoria, distancia, total_segundos):
-#compara o tempo com o limite da categoria (limites em segundos)
+    """compara o tempo com o limite da categoria (limites em segundos)"""
     if categoria == "Juvenil" or categoria == "Master":
         limite = 1500 if distancia == 5 else 3120
     elif categoria == "Adulto":
         limite = 1320 if distancia == 5 else 2760
-    else:
+    elif categoria == "Veterano":
         limite = 1800 if distancia == 5 else 3780
- 
-    return total_segundos <= limite
- 
- 
+    else:
+        return False
+    
 def fazer_inscricao():
-#faz a inscricao e retorna o valor pago (ou None se for recusada)
+    """faz a inscricao e retorna o valor pago (ou None se for recusada)"""
     nome = input("Nome completo: ")
     idade = int(input("Idade: "))
  
@@ -115,9 +117,16 @@ def fazer_inscricao():
  
  
 def calcular_resultado():
-#mostra o resultado de um corredor
+    """mostra o resultado de um corredor"""
     idade = int(input("Idade: "))
+    while idade < 16:
+        print("Idade mín 16 anos para participar.")
+        idade = int(input("Idade:"))
+
     distancia = int(input("Distância (5 ou 10 km): "))
+    while distancia != 5 and distancia != 10:
+            distancia = int(input("Escolha 5 ou 10 km: "))
+
     tempo = input("Tempo de prova (HH:MM:SS): ")
  
     categoria = determinar_categoria(idade)
@@ -135,7 +144,7 @@ def calcular_resultado():
  
  
 def main():
-#menu principal
+    """menu principal"""
     total_inscricoes = 0
     total_arrecadado = 0.0
     opcao = 0
@@ -155,7 +164,12 @@ def main():
                 total_arrecadado += valor
         elif opcao == 2:
             calcular_resultado()
+        elif opcao != 3:
+            print("Opção inválida! Escolha 1, 2 ou 3.")
  
     print("--- RESUMO DA SESSÃO ---")
     print("Inscrições feitas:", total_inscricoes)
     print(f"Total arrecadado: R$ {total_arrecadado:.2f}")
+
+if __name__ == "__main__":
+    main()
