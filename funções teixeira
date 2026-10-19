@@ -1,175 +1,231 @@
 def calcular_valor_inscricao(idade, distancia, lote):
-    """calcula valor da inscrição"""
-    valor = 80.0 if lote == 1 else 100.0
- 
+    valor = 80 if lote == 1 else 100
+
     if distancia == 10:
-        valor += 20.0
- 
+        valor += 20
+
     if idade >= 60:
         valor *= 0.5
- 
+
     return valor
- 
- 
+
+
 def determinar_categoria(idade):
-    """categoria dos corredores"""
     if 16 <= idade <= 19:
         return "Juvenil"
-    elif 20 <= idade <= 39:
+    elif idade <= 39:
         return "Adulto"
-    elif 40 <= idade <= 59:
+    elif idade <= 59:
         return "Master"
-    elif 60 <= idade:
+    else:
         return "Veterano"
-    else:
-        return "Inváida"
- 
-def extrair_primeiro_nome(nome_completo):
-    """recebe o primeiro nome do nome completo"""
-    nome_completo = nome_completo.strip()
-    pos_espaco = nome_completo.find(" ")
-    if pos_espaco == -1:
-        return nome_completo
-    return nome_completo[:pos_espaco]
- 
- 
-def gerar_codigo_corredor(nome_completo, idade):
-    """Gera o código do corredor usando as 3 primeiras letras do primeiro e ultimo nome
-(.find(" ") e .rfind(" ") são usados para ir do inicio da str ate o primeiro espaço e do final ate o ultimo espaço)"""
-    
-    nome_completo = nome_completo.strip()
-    pos_primeiro_espaco = nome_completo.find(" ")
-    pos_ultimo_espaco = nome_completo.rfind(" ")
- 
-    if pos_primeiro_espaco == -1:
-        primeiro = nome_completo
-        ultimo = nome_completo
-    else:
-        primeiro = nome_completo[:pos_primeiro_espaco]
-        ultimo = nome_completo[pos_ultimo_espaco + 1:]
- 
-    cod_primeiro = primeiro[:3].upper()
-    cod_ultimo = ultimo[:3].upper()
- 
-    return f"{cod_primeiro}{cod_ultimo}{idade}"
- 
- 
+
+
+def gerar_codigo_corredor(nome, idade):
+    nomes = nome.strip().split()
+    return f"{nomes[0][:3]}{nomes[-1][:3]}{idade}".upper()
+
+
 def converter_tempo_para_segundos(tempo):
-    """converte o tempo HH:MM:SS (texto) para segundos"""
-    partes = tempo.strip().split(":")
-    horas = int(partes[0])
-    minutos = int(partes[1])
-    segundos = int(partes[2])
- 
+    horas, minutos, segundos = map(int, tempo.split(":"))
     return horas * 3600 + minutos * 60 + segundos
- 
- 
+
+
 def calcular_pace(tempo, distancia):
-    """calcula o pace (tempo medio por km), desprezando fracoes de segundo"""
-    total_segundos = converter_tempo_para_segundos(tempo)
-    segundos_por_km = total_segundos // distancia
- 
-    minutos = segundos_por_km // 60
-    segundos = segundos_por_km % 60
- 
-    return f"{minutos}'{segundos:02d}\"/km"
- 
- 
-def foi_premiado(categoria, distancia, total_segundos):
-    """compara o tempo com o limite da categoria (limites em segundos)"""
-    if categoria == "Juvenil" or categoria == "Master":
-        limite = 1500 if distancia == 5 else 3120
-    elif categoria == "Adulto":
-        limite = 1320 if distancia == 5 else 2760
-    elif categoria == "Veterano":
-        limite = 1800 if distancia == 5 else 3780
-    else:
+    return tempo / distancia
+
+
+def foi_premiado(categoria, distancia, tempo):
+    limites = {
+        "Juvenil": 18000,
+        "Adulto": 15000,
+        "Master": 20000,
+        "Veterano": 25000
+    }
+
+    if categoria not in limites:
         return False
-    
-def fazer_inscricao():
-    """faz a inscricao e retorna o valor pago (ou None se for recusada)"""
-    nome = input("Nome completo: ")
-    idade = int(input("Idade: "))
- 
-    if idade < 16:
-        print("Inscrição recusada: idade mínima de 16 anos.")
-        return None
- 
-    distancia = int(input("Distância (5 ou 10 km): "))
-    while distancia != 5 and distancia != 10:
-        distancia = int(input("Escolha 5 ou 10 km: "))
- 
-    lote = int(input("Lote (1 ou 2): "))
-    while lote != 1 and lote != 2:
-        lote = int(input("Escolha lote 1 ou 2: "))
- 
-    valor = calcular_valor_inscricao(idade, distancia, lote)
- 
-    print()
-    print("--- COMPROVANTE ---")
-    print("Corredor:", extrair_primeiro_nome(nome))
-    print("Código:", gerar_codigo_corredor(nome, idade))
-    print("Categoria:", determinar_categoria(idade))
-    print("Distância:", distancia, "km")
-    print(f"Valor a pagar: R$ {valor:.2f}")
- 
-    return valor
- 
- 
+
+    limite = limites[categoria]
+
+    if distancia == 10:
+        limite *= 2
+
+    return tempo <= limite
+
+
+def cadastrar_corredor(corredores):
+    nome = input("Nome completo: ").strip()
+
+    try:
+        idade = int(input("Idade: "))
+        distancia = int(input("Distância (5 ou 10 km): "))
+        lote = int(input("Lote (1 ou 2): "))
+    except ValueError:
+        print("Digite números válidos.")
+        return
+
+    if idade < 16 or distancia not in (5, 10) or lote not in (1, 2):
+        print("Dados inválidos. Confira a idade, distância e lote.")
+        return
+
+    codigo = gerar_codigo_corredor(nome, idade)
+
+    if any(c["codigo"] == codigo for c in corredores):
+        print("Já existe um corredor com esse código.")
+        return
+
+    corredor = {
+        "nome": nome,
+        "idade": idade,
+        "distancia": distancia,
+        "lote": lote,
+        "codigo": codigo,
+        "categoria": determinar_categoria(idade),
+        "valor": calcular_valor_inscricao(idade, distancia, lote),
+        "tempo": None
+    }
+
+    corredores.append(corredor)
+
+    print("\nInscrição realizada!")
+    print("Código:", codigo)
+    print("Categoria:", corredor["categoria"])
+    print(f"Valor: R$ {corredor['valor']:.2f}")
+
+
+def listar_inscritos(corredores):
+    if not corredores:
+        print("Nenhum corredor cadastrado.")
+        return
+
+    for c in corredores:
+        print(
+            f"\nNome: {c['nome']} | Código: {c['codigo']}"
+            f"\nCategoria: {c['categoria']} | Distância: {c['distancia']} km"
+            f"\nValor: R$ {c['valor']:.2f} | Tempo: {c['tempo']}"
+        )
+
+
+def buscar_corredor(corredores):
+    codigo = input("Digite o código do corredor: ").strip().upper()
+
+    for c in corredores:
+        if c["codigo"] == codigo:
+            print(c)
+            return
+
+    print("Corredor não encontrado.")
+
+
+def registrar_tempo(corredores):
+    codigo = input("Código do corredor: ").strip().upper()
+
+    for c in corredores:
+        if c["codigo"] == codigo:
+            tempo = input("Tempo (HH:MM:SS): ")
+
+            try:
+                segundos = converter_tempo_para_segundos(tempo)
+
+                horas, minutos, seg = map(int, tempo.split(":"))
+
+                if horas < 0 or not (0 <= minutos <= 59 and 0 <= seg <= 59):
+                    print("Tempo inválido.")
+                    return
+
+            except ValueError:
+                print("Formato inválido. Use HH:MM:SS.")
+                return
+
+            c["tempo"] = tempo
+            pace = calcular_pace(segundos, c["distancia"])
+
+            print(f"Tempo registrado! Pace: {pace:.2f} segundos/km")
+
+            if foi_premiado(c["categoria"], c["distancia"], segundos):
+                print("Parabéns! O corredor atingiu o limite de premiação.")
+            else:
+                print("O corredor não atingiu o limite de premiação.")
+
+            return
+
+    print("Corredor não encontrado.")
+
+
 def calcular_resultado():
-    """mostra o resultado de um corredor"""
-    idade = int(input("Idade: "))
-    while idade < 16:
-        print("Idade mín 16 anos para participar.")
-        idade = int(input("Idade:"))
+    try:
+        idade = int(input("Idade: "))
+        distancia = int(input("Distância (5 ou 10 km): "))
 
-    distancia = int(input("Distância (5 ou 10 km): "))
-    while distancia != 5 and distancia != 10:
-            distancia = int(input("Escolha 5 ou 10 km: "))
+        if idade < 16 or distancia not in (5, 10):
+            print("Idade ou distância inválida.")
+            return
 
-    tempo = input("Tempo de prova (HH:MM:SS): ")
- 
-    categoria = determinar_categoria(idade)
-    segundos = converter_tempo_para_segundos(tempo)
- 
-    print()
-    print("--- RESULTADO ---")
-    print("Categoria:", categoria)
-    print("Tempo em segundos:", segundos)
-    print("Pace:", calcular_pace(tempo, distancia))
-    if foi_premiado(categoria, distancia, segundos):
-        print("Premiado: SIM")
-    else:
-        print("Premiado: NÃO")
- 
- 
+        tempo = input("Tempo (HH:MM:SS): ")
+        segundos = converter_tempo_para_segundos(tempo)
+
+        horas, minutos, seg = map(int, tempo.split(":"))
+
+        if horas < 0 or not (0 <= minutos <= 59 and 0 <= seg <= 59):
+            print("Tempo inválido.")
+            return
+
+        categoria = determinar_categoria(idade)
+        pace = calcular_pace(segundos, distancia)
+
+        print("\nCategoria:", categoria)
+        print("Tempo em segundos:", segundos)
+        print(f"Pace: {pace:.2f} segundos/km")
+
+        if foi_premiado(categoria, distancia, segundos):
+            print("Corredor premiado!")
+        else:
+            print("Corredor não premiado.")
+
+    except ValueError:
+        print("Dados inválidos. Confira os valores digitados.")
+
+
 def main():
-    """menu principal"""
-    total_inscricoes = 0
-    total_arrecadado = 0.0
-    opcao = 0
- 
-    while opcao != 3:
-        print()
-        print("1 - Fazer inscrição")
-        print("2 - Calcular resultado")
-        print("3 - Sair")
-        opcao = int(input("Escolha: "))
-        print()
- 
-        if opcao == 1:
-            valor = fazer_inscricao()
-            if valor is not None:
-                total_inscricoes += 1
-                total_arrecadado += valor
-        elif opcao == 2:
-            calcular_resultado()
-        elif opcao != 3:
-            print("Opção inválida! Escolha 1, 2 ou 3.")
- 
-    print("--- RESUMO DA SESSÃO ---")
-    print("Inscrições feitas:", total_inscricoes)
-    print(f"Total arrecadado: R$ {total_arrecadado:.2f}")
+    corredores = []
 
-if __name__ == "__main__":
-    main()
+    while True:
+        print("\n===== SISTEMA DE CORRIDA =====")
+        print("1 - Cadastrar corredor")
+        print("2 - Listar inscritos")
+        print("3 - Buscar corredor")
+        print("4 - Registrar tempo")
+        print("5 - Calcular resultado")
+        print("6 - Sair")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            cadastrar_corredor(corredores)
+
+        elif opcao == "2":
+            listar_inscritos(corredores)
+
+        elif opcao == "3":
+            buscar_corredor(corredores)
+
+        elif opcao == "4":
+            registrar_tempo(corredores)
+
+        elif opcao == "5":
+            calcular_resultado()
+
+        elif opcao == "6":
+            total = sum(c["valor"] for c in corredores)
+
+            print("\nEncerrando o sistema...")
+            print("Total de inscritos:", len(corredores))
+            print(f"Total arrecadado: R$ {total:.2f}")
+            break
+
+        else:
+            print("Opção inválida.")
+
+
+main()
