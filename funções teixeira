@@ -1,3 +1,12 @@
+# Categorias e tempos-limite em segundos: (nome, limite 5 km, limite 10 km)
+CATEGORIAS = (
+    ("Juvenil", 1500, 3120),
+    ("Adulto", 1320, 2760),
+    ("Master", 1500, 3120),
+    ("Veterano", 1800, 3780),
+)
+
+
 def calcular_valor_inscricao(idade, distancia, lote):
     valor = 80 if lote == 1 else 100
 
@@ -36,25 +45,39 @@ def calcular_pace(tempo, distancia):
 
 
 def foi_premiado(categoria, distancia, tempo):
-    limites = {
-        "Juvenil": 18000,
-        "Adulto": 15000,
-        "Master": 20000,
-        "Veterano": 25000
-    }
+    for nome, limite_5km, limite_10km in CATEGORIAS:
+        if nome == categoria:
+            limite = limite_5km if distancia == 5 else limite_10km
+            return tempo <= limite
 
-    if categoria not in limites:
-        return False
-
-    limite = limites[categoria]
-
-    if distancia == 10:
-        limite *= 2
-
-    return tempo <= limite
+    return False
 
 
-def cadastrar_corredor(corredores):
+def gerar_codigo_unico(nome, idade, codigos_usados):
+    base = gerar_codigo_corredor(nome, idade)
+    codigo = base
+    numero = 2
+
+    while codigo in codigos_usados:
+        codigo = f"{base}-{numero}"
+        numero += 1
+
+    return codigo
+
+
+def contar_por_categoria(corredores):
+    contagem = {}
+
+    for nome, _, _ in CATEGORIAS:
+        contagem[nome] = 0
+
+    for c in corredores:
+        contagem[c["categoria"]] += 1
+
+    return contagem
+
+
+def cadastrar_corredor(corredores, codigos_usados):
     nome = input("Nome completo: ").strip()
 
     try:
@@ -69,11 +92,7 @@ def cadastrar_corredor(corredores):
         print("Dados inválidos. Confira a idade, distância e lote.")
         return
 
-    codigo = gerar_codigo_corredor(nome, idade)
-
-    if any(c["codigo"] == codigo for c in corredores):
-        print("Já existe um corredor com esse código.")
-        return
+    codigo = gerar_codigo_unico(nome, idade, codigos_usados)
 
     corredor = {
         "nome": nome,
@@ -87,6 +106,7 @@ def cadastrar_corredor(corredores):
     }
 
     corredores.append(corredor)
+    codigos_usados.add(codigo)
 
     print("\nInscrição realizada!")
     print("Código:", codigo)
@@ -187,8 +207,35 @@ def calcular_resultado():
         print("Dados inválidos. Confira os valores digitados.")
 
 
+def mostrar_inscritos_por_categoria(corredores):
+    print("\nInscritos por categoria:")
+    for categoria, quantidade in contar_por_categoria(corredores).items():
+        print(f"{categoria}: {quantidade}")
+
+
+def mostrar_resultados(corredores):
+    com_tempo = [c for c in corredores if c["tempo"] is not None]
+    premiados = [
+        c for c in com_tempo
+        if foi_premiado(
+            c["categoria"],
+            c["distancia"],
+            converter_tempo_para_segundos(c["tempo"]),
+        )
+    ]
+
+    print("\nCom tempo registrado:", len(com_tempo))
+    for c in com_tempo:
+        print(f"  {c['codigo']} | {c['nome']} | {c['tempo']}")
+
+    print("Premiados:", len(premiados))
+    for c in premiados:
+        print(f"  {c['codigo']} | {c['nome']} | {c['categoria']}")
+
+
 def main():
     corredores = []
+    codigos_usados = set()
 
     while True:
         print("\n===== SISTEMA DE CORRIDA =====")
@@ -197,12 +244,14 @@ def main():
         print("3 - Buscar corredor")
         print("4 - Registrar tempo")
         print("5 - Calcular resultado")
-        print("6 - Sair")
+        print("6 - Inscritos por categoria")
+        print("7 - Resultados (com tempo e premiados)")
+        print("8 - Sair")
 
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            cadastrar_corredor(corredores)
+            cadastrar_corredor(corredores, codigos_usados)
 
         elif opcao == "2":
             listar_inscritos(corredores)
@@ -217,6 +266,12 @@ def main():
             calcular_resultado()
 
         elif opcao == "6":
+            mostrar_inscritos_por_categoria(corredores)
+
+        elif opcao == "7":
+            mostrar_resultados(corredores)
+
+        elif opcao == "8":
             total = sum(c["valor"] for c in corredores)
 
             print("\nEncerrando o sistema...")
