@@ -233,6 +233,94 @@ def mostrar_resultados(corredores):
         print(f"  {c['codigo']} | {c['nome']} | {c['categoria']}")
 
 
+def pegar_tempo(c):
+    return converter_tempo_para_segundos(c["tempo"])
+
+
+def classificacao_geral(corredores):
+    print("\n===== CLASSIFICAÇÃO GERAL =====")
+    for dist in (5, 10):
+        print(f"\n--- Prova de {dist} km ---")
+
+        filtrados = []
+        for c in corredores:
+            if c["distancia"] == dist and c["tempo"] is not None:
+                filtrados.append(c)
+
+        if len(filtrados) == 0:
+            print("Nenhum tempo registrado nesta distância.")
+        else:
+            filtrados.sort(key=pegar_tempo)
+
+            posicao = 1
+            for c in filtrados:
+                print(f"{posicao}º lugar: {c['codigo']} | {c['nome']} | Categoria: {c['categoria']} | Tempo: {c['tempo']}")
+                posicao += 1
+
+
+def podio_por_categoria(corredores):
+    print("\n===== PÓDIO POR CATEGORIA =====")
+    for dist in (5, 10):
+        print(f"\n--- Distância {dist} km ---")
+
+        for nome_cat, _, _ in CATEGORIAS:
+            filtrados = []
+            for c in corredores:
+                if c["distancia"] == dist and c["categoria"] == nome_cat and c["tempo"] is not None:
+                    filtrados.append(c)
+
+            print(f"\nCategoria: {nome_cat}")
+            if len(filtrados) == 0:
+                print("  Nenhum tempo registrado.")
+            else:
+                filtrados.sort(key=pegar_tempo)
+
+                posicao = 1
+                for c in filtrados[:3]:
+                    print(f"  {posicao}º lugar: {c['codigo']} | {c['nome']} | Tempo: {c['tempo']}")
+                    posicao += 1
+
+
+def relatorio_final(corredores):
+    total_inscritos = len(corredores)
+
+    total_arrecadado = 0.0
+    for c in corredores:
+        total_arrecadado += c["valor"]
+
+    print("\n===== RELATÓRIO FINAL =====")
+    print("Total de inscritos:", total_inscritos)
+    print(f"Total arrecadado: R$ {total_arrecadado:.2f}")
+
+    for dist in (5, 10):
+        print(f"\n--- Prova de {dist} km ---")
+
+        com_tempo = []
+        for c in corredores:
+            if c["distancia"] == dist and c["tempo"] is not None:
+                com_tempo.append(c)
+
+        if len(com_tempo) == 0:
+            print("  Nenhum tempo registrado nesta distância.")
+        else:
+            soma_segundos = 0
+            mais_rapido = com_tempo[0]
+
+            for c in com_tempo:
+                seg = converter_tempo_para_segundos(c["tempo"])
+                soma_segundos += seg
+
+                if seg < converter_tempo_para_segundos(mais_rapido["tempo"]):
+                    mais_rapido = c
+
+            media = soma_segundos / len(com_tempo)
+
+            print(f"  Tempo médio: {media:.1f} segundos")
+            print(f"  Corredor mais rápido: {mais_rapido['codigo']} - {mais_rapido['nome']} ({mais_rapido['tempo']})")
+
+    print("\nSistema encerrado.")
+
+
 def main():
     corredores = []
     codigos_usados = set()
@@ -246,7 +334,9 @@ def main():
         print("5 - Calcular resultado")
         print("6 - Inscritos por categoria")
         print("7 - Resultados (com tempo e premiados)")
-        print("8 - Sair")
+        print("8 - Classificação geral por distância")
+        print("9 - Pódio por categoria")
+        print("10 - Sair")
 
         opcao = input("Escolha uma opção: ")
 
@@ -272,11 +362,13 @@ def main():
             mostrar_resultados(corredores)
 
         elif opcao == "8":
-            total = sum(c["valor"] for c in corredores)
+            classificacao_geral(corredores)
 
-            print("\nEncerrando o sistema...")
-            print("Total de inscritos:", len(corredores))
-            print(f"Total arrecadado: R$ {total:.2f}")
+        elif opcao == "9":
+            podio_por_categoria(corredores)
+
+        elif opcao == "10":
+            relatorio_final(corredores)
             break
 
         else:
