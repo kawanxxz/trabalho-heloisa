@@ -1,15 +1,24 @@
-# Categorias e tempos-limite em segundos: (nome, limite 5 km, limite 10 km)
+"""
+Sistema da Corrida Noturna da Ponte Estaiada
+Disciplina: Programação I - Python (UNIFSA)
+"""
+
+# Tupla com categorias e tempos-limite em segundos: (nome, limite 5km, limite 10km)
 CATEGORIAS = (
-    ("Juvenil", 1500, 3120),
-    ("Adulto", 1320, 2760),
-    ("Master", 1500, 3120),
-    ("Veterano", 1800, 3780)
+    ("Juvenil", 1500, 3120),   # 00:25:00 e 00:52:00
+    ("Adulto", 1320, 2760),    # 00:22:00 e 00:46:00
+    ("Master", 1500, 3120),    # 00:25:00 e 00:52:00
+    ("Veterano", 1800, 3780)   # 00:30:00 e 01:03:00
 )
 
 
+# ==============================================================================
+# FUNÇÕES DE REGRA DE NEGÓCIO (Etapa 1 & 2)
+# (Não possuem print nem input, usam docstrings e return)
+# ==============================================================================
 
 def calcular_valor_inscricao(idade: int, distancia: int, lote: int) -> float:
-    # Definindo um valor base dependendo do lote
+    """Calcula o valor da inscrição com base no lote, distância e idade."""
     valor = 80.0 if lote == 1 else 100.0
 
     if distancia == 10:
@@ -22,6 +31,7 @@ def calcular_valor_inscricao(idade: int, distancia: int, lote: int) -> float:
 
 
 def determinar_categoria(idade: int) -> str:
+    """Determina a categoria do corredor conforme a faixa etária."""
     if 16 <= idade <= 19:
         return "Juvenil"
     elif 20 <= idade <= 39:
@@ -33,20 +43,28 @@ def determinar_categoria(idade: int) -> str:
     else:
         return "Idade Inválida"
 
-
 def extrair_primeiro_nome(nome_completo: str) -> str:
+    """
+    Extrai o primeiro nome do corredor usando fatiamento (slicing).
+    Proibido o uso de split().
+    """
     nome_limpo = nome_completo.strip()
     espaco_pos = nome_limpo.find(" ")
-
+    
     if espaco_pos == -1:
         return nome_limpo
-
+    
     return nome_limpo[:espaco_pos]
 
 
 def gerar_codigo_corredor(nome: str, idade: int) -> str:
+    """
+    Gera o código do corredor usando exclusivamente slicing:
+    3 primeiras letras do primeiro nome + 3 primeiras letras do último sobrenome + idade.
+    Proibido o uso de split().
+    """
     nome_limpo = nome.strip()
-
+    
     # Busca da posição dos espaços para identificar primeiro e último nome
     primeiro_espaco = nome_limpo.find(" ")
     ultimo_espaco = nome_limpo.rfind(" ")
@@ -56,7 +74,7 @@ def gerar_codigo_corredor(nome: str, idade: int) -> str:
         primeiro_nome = nome_limpo
         ultimo_sobrenome = nome_limpo
     else:
-        # Extração via slicing
+        # Extração estrita via slicing
         primeiro_nome = nome_limpo[:primeiro_espaco]
         ultimo_sobrenome = nome_limpo[ultimo_espaco + 1:]
 
@@ -67,6 +85,7 @@ def gerar_codigo_corredor(nome: str, idade: int) -> str:
 
 
 def gerar_codigo_unico(nome: str, idade: int, codigos_usados: set) -> str:
+    """Gera código único resolvendo conflito se já existir no set de códigos."""
     base = gerar_codigo_corredor(nome, idade)
     codigo = base
     numero = 2
@@ -79,9 +98,10 @@ def gerar_codigo_unico(nome: str, idade: int, codigos_usados: set) -> str:
 
 
 def validar_formato_tempo(tempo_str: str) -> bool:
+    """Valida se o tempo está no formato estrito HH:MM:SS usando slicing."""
     if len(tempo_str) != 8 or tempo_str[2] != ':' or tempo_str[5] != ':':
         return False
-
+    
     try:
         horas = int(tempo_str[:2])
         minutos = int(tempo_str[3:5])
@@ -95,6 +115,10 @@ def validar_formato_tempo(tempo_str: str) -> bool:
 
 
 def converter_tempo_para_segundos(tempo_str: str) -> int:
+    """
+    Converte tempo HH:MM:SS em segundos usando slicing obrigatoriamente.
+    (Proibido usar split conforme seções 3.2 e 6.1 do documento).
+    """
     horas = int(tempo_str[:2])
     minutos = int(tempo_str[3:5])
     segundos = int(tempo_str[6:8])
@@ -102,6 +126,10 @@ def converter_tempo_para_segundos(tempo_str: str) -> int:
 
 
 def calcular_pace(tempo_segundos: int, distancia: int) -> str:
+    """
+    Calcula o pace desprezando as frações de segundo e formata como M'S"/km.
+    Exemplo: 1290s / 5km = 258s/km -> 4'18"/km.
+    """
     pace_segundos_por_km = int(tempo_segundos // distancia)
     minutos = pace_segundos_por_km // 60
     segundos = pace_segundos_por_km % 60
@@ -109,6 +137,7 @@ def calcular_pace(tempo_segundos: int, distancia: int) -> str:
 
 
 def foi_premiado(categoria: str, distancia: int, tempo_segundos: int) -> bool:
+    """Verifica se o tempo é menor ou igual ao tempo-limite da categoria."""
     for nome_cat, limite_5k, limite_10k in CATEGORIAS:
         if nome_cat == categoria:
             limite = limite_5k if distancia == 5 else limite_10k
@@ -117,12 +146,19 @@ def foi_premiado(categoria: str, distancia: int, tempo_segundos: int) -> bool:
 
 
 def contar_por_categoria(corredores: list) -> dict:
+    """Retorna um dicionário com a contagem de inscritos por categoria."""
     contagem = {nome: 0 for nome, _, _ in CATEGORIAS}
     for c in corredores:
         contagem[c["categoria"]] += 1
     return contagem
 
+
+# ==============================================================================
+# FUNÇÕES DE INTERAÇÃO COM USUÁRIO E MENU (Entrada / Saída)
+# ==============================================================================
+
 def cadastrar_corredor(corredores: list, codigos_usados: set):
+    """Lê os dados, valida entradas e cadastra um novo corredor."""
     print("\n--- CADASTRO DE CORREDOR ---")
     nome = input("Nome completo: ").strip()
 
@@ -187,6 +223,7 @@ def cadastrar_corredor(corredores: list, codigos_usados: set):
 
 
 def listar_inscritos(corredores: list):
+    """Exibe todos os corredores cadastrados no sistema."""
     if not corredores:
         print("\nNenhum corredor cadastrado.")
         return
@@ -198,11 +235,12 @@ def listar_inscritos(corredores: list):
             f"Nome: {c['nome']} | Código: {c['codigo']}\n"
             f"Categoria: {c['categoria']} | Distância: {c['distancia']} km\n"
             f"Valor: R$ {c['valor']:.2f} | Tempo: {tempo_str}\n"
-            f"-{'-'*40}"
+            f"{'-'*40}"
         )
 
 
 def buscar_corredor(corredores: list):
+    """Busca um corredor pelo código gerado."""
     codigo = input("\nDigite o código do corredor: ").strip().upper()
 
     for c in corredores:
@@ -219,6 +257,7 @@ def buscar_corredor(corredores: list):
 
 
 def registrar_tempo(corredores: list):
+    """Registra o tempo de um corredor cadastrado via HH:MM:SS."""
     codigo = input("\nCódigo do corredor: ").strip().upper()
 
     for c in corredores:
@@ -247,6 +286,7 @@ def registrar_tempo(corredores: list):
 
 
 def simular_resultado_direto():
+    """Simula o resultado de um corredor sem precisar cadastrar no sistema."""
     print("\n--- CALCULAR RESULTADO INDIVIDUAL ---")
     try:
         idade = int(input("Idade: "))
@@ -281,9 +321,13 @@ def simular_resultado_direto():
 
 
 def mostrar_resultados_gerais(corredores: list):
+    """
+    Exibe os resultados consolidados com uso de List Comprehensions (Requisito 4.2).
+    """
+    # Comprehensions exigidas na Seção 4.2
     com_tempo = [c for c in corredores if c["tempo"] is not None]
     premiados = [
-        c for c in com_tempo
+        c for c in com_tempo 
         if foi_premiado(c["categoria"], c["distancia"], converter_tempo_para_segundos(c["tempo"]))
     ]
 
@@ -300,6 +344,7 @@ def mostrar_resultados_gerais(corredores: list):
 
 
 def classificacao_geral(corredores: list):
+    """Classificação geral ordenada por menor tempo em cada distância (Nível Avançado)."""
     print("\n===== CLASSIFICAÇÃO GERAL =====")
     for dist in (5, 10):
         print(f"\n--- Prova de {dist} km ---")
@@ -316,12 +361,13 @@ def classificacao_geral(corredores: list):
 
 
 def podio_por_categoria(corredores: list):
+    """Pódio com os 3 melhores tempos por categoria em cada distância (Nível Avançado)."""
     print("\n===== PÓDIO POR CATEGORIA =====")
     for dist in (5, 10):
         print(f"\n================ Prova {dist} km ================")
         for nome_cat, _, _ in CATEGORIAS:
             filtrados = [
-                c for c in corredores
+                c for c in corredores 
                 if c["distancia"] == dist and c["categoria"] == nome_cat and c["tempo"] is not None
             ]
 
@@ -335,12 +381,13 @@ def podio_por_categoria(corredores: list):
 
 
 def relatorio_final(corredores: list):
+    """Exibe o relatório final antes de encerrar o programa (Seção 4.3)."""
     print("\n==========================================")
     print("             RELATÓRIO FINAL              ")
     print("==========================================")
     print("Total de inscritos :", len(corredores))
-
-    total_arrecadado = sum(c["valor" ] for c in corredores)
+    
+    total_arrecadado = sum(c["valor"] for c in corredores)
     print(f"Total arrecadado   : R$ {total_arrecadado:.2f}")
 
     for dist in (5, 10):
@@ -362,7 +409,7 @@ def relatorio_final(corredores: list):
 
 def carregar_dados_exemplo(corredores: list, codigos_usados: set):
     """
-    Carrega corredores de teste baseados na tabela oficial do projeto.
+    Carrega corredores de teste baseados na tabela oficial da Seção 3.2 do documento.
     """
     dados = [
         ("Maria Clara Sousa", 34, 5, 1, "00:21:30"),
@@ -379,7 +426,7 @@ def carregar_dados_exemplo(corredores: list, codigos_usados: set):
         codigo = gerar_codigo_unico(nome, idade, codigos_usados)
         categoria = determinar_categoria(idade)
         valor = calcular_valor_inscricao(idade, dist, lote)
-
+        
         corredores.append({
             "nome": nome,
             "idade": idade,
