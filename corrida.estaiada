@@ -439,11 +439,16 @@ def carregar_dados_exemplo(corredores: list, codigos_usados: set):
         })
         codigos_usados.add(codigo)
 
+
+# ==============================================================================
+# PROGRAMA PRINCIPAL
+# ==============================================================================
+
 def main():
     corredores = []
     codigos_usados = set()
 
-    # Carrega dados para facilitar os testes da banca
+    # Carrega dados para facilitar os testes da banca (Etapa 2)
     carregar_dados_exemplo(corredores, codigos_usados)
 
     while True:
